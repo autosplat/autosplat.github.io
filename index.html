@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Realistic scene reconstruction and view synthesis are essential for advancing autonomous driving systems by simulating safety-critical scenarios. 3D Gaussian Splatting excels in real-time rendering and static scene reconstructions but struggles with modeling driving scenarios due to complex backgrounds, dynamic objects, and sparse views. We propose AutoSplat, a framework employing Gaussian splatting to achieve highly realistic reconstructions of autonomous driving scenes. By imposing geometric constraints on Gaussians representing the road and sky regions, our method enables multi-view consistent simulation of challenging scenarios including lane changes. Leveraging 3D templates, we introduce a reflected Gaussian consistency constraint to supervise both the visible and unseen side of foreground objects. Moreover, to model the dynamic appearance of foreground objects, we estimate residual spherical harmonics for each foreground Gaussian. Extensive experiments on Pandaset and KITTI demonstrate that AutoSplat outperforms state-of-the-art methods in scene reconstruction and novel view synthesis across diverse driving scenarios.">
+  <meta property="og:title" content="AutoSplat: Constrained Gaussian Splatting for Autonomous Driving Scene Reconstruction"/>
+  <meta property="og:description" content="Realistic scene reconstruction and view synthesis are essential for advancing autonomous driving systems by simulating safety-critical scenarios. 3D Gaussian Splatting excels in real-time rendering and static scene reconstructions but struggles with modeling driving scenarios due to complex backgrounds, dynamic objects, and sparse views. We propose AutoSplat, a framework employing Gaussian splatting to achieve highly realistic reconstructions of autonomous driving scenes. By imposing geometric constraints on Gaussians representing the road and sky regions, our method enables multi-view consistent simulation of challenging scenarios including lane changes. Leveraging 3D templates, we introduce a reflected Gaussian consistency constraint to supervise both the visible and unseen side of foreground objects. Moreover, to model the dynamic appearance of foreground objects, we estimate residual spherical harmonics for each foreground Gaussian. Extensive experiments on Pandaset and KITTI demonstrate that AutoSplat outperforms state-of-the-art methods in scene reconstruction and novel view synthesis across diverse driving scenarios."/>
+  <meta property="og:url" content="https://www.autosplat.github.io"/>
+  <meta property="og:image" content="static/images/autosplat_teaser.gif" />
+  <meta property="og:image:width" content="1200"/>
+  <meta property="og:image:height" content="630"/>
+  <meta name="twitter:title" content="AutoSplat: Constrained Gaussian Splatting for Autonomous Driving Scene Reconstruction">
+  <meta name="twitter:description" content="Realistic scene reconstruction and view synthesis are essential for advancing autonomous driving systems by simulating safety-critical scenarios. 3D Gaussian Splatting excels in real-time rendering and static scene reconstructions but struggles with modeling driving scenarios due to complex backgrounds, dynamic objects, and sparse views. We propose AutoSplat, a framework employing Gaussian splatting to achieve highly realistic reconstructions of autonomous driving scenes. By imposing geometric constraints on Gaussians representing the road and sky regions, our method enables multi-view consistent simulation of challenging scenarios including lane changes. Leveraging 3D templates, we introduce a reflected Gaussian consistency constraint to supervise both the visible and unseen side of foreground objects. Moreover, to model the dynamic appearance of foreground objects, we estimate residual spherical harmonics for each foreground Gaussian. Extensive experiments on Pandaset and KITTI demonstrate that AutoSplat outperforms state-of-the-art methods in scene reconstruction and novel view synthesis across diverse driving scenarios.">
+  <!-- Path to banner image, should be in the path listed below. Optimal dimenssions are 1200X600-->
+  <meta name="twitter:image" content="static/images/autosplat_teaser.gif">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- Keywords for your paper to be indexed by-->
+  <meta name="keywords" content="AutoSplat, 3D Gaussian Splatting, Autonomous Driving, Scene Reconstruction">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>AutoSplat</title>
+  <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+  rel="stylesheet">
+
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script src="static/js/bulma-carousel.min.js"></script>
+  <script src="static/js/bulma-slider.min.js"></script>
+  <script src="static/js/video_comparison.js"></script>
+  <script src="static/js/index.js"></script>
+</head>
+<body>
+
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title" style="font-size: 2.8rem; max-width: 100%; margin: 0.5 auto; line-height: 1.2;">AutoSplat: Constrained Gaussian Splatting <br>for Autonomous Driving Scene Reconstruction</h1>
+            <div class="is-size-5 publication-authors">
+              <!-- Paper authors -->
+              <div class="author-row">
+                <span class="author-block">
+                  <a href="https://ca.linkedin.com/in/mustafarehanahmadkhan" target="_blank">Mustafa Khan</a><sup>*,1,2</sup>,</span>
+                <span class="author-block">
+                  <a href="https://scholar.google.com/citations?hl=en&user=0fhlNwEAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Hamidreza Fazlali</a><sup>*,2</sup>,</span>
+                <span class="author-block">
+                  <a href="https://scholar.google.com/citations?hl=en&user=tJ-3yAkAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Dhruv Sharma</a><sup>2</sup>,</span>
+                </span>
+              </div>
+              <div class="author-row">
+                  <span class="author-block">
+                    <a href="https://scholar.google.com/citations?hl=en&user=SkzzXSYAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Tongtong Cao</a><sup>2</sup>, </span>
+                  </span>
+                  <span class="author-block">
+                    <a href="https://scholar.google.com/citations?hl=zh-CN&user=aubQLGYAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Dongfeng Bai</a><sup>2</sup>, </span>
+                  </span>
+                  <span class="author-block">
+                    <a href="https://scholar.google.com/citations?hl=en&user=P4Rp5uAAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Yuan Ren</a><sup>2</sup>, </span>
+                  </span>
+                  <span class="author-block">
+                    <a href="https://scholar.google.com.sg/citations?hl=en&user=-rCulKwAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Bingbing Liu</a><sup>2</sup>,</span>
+                  </span>
+                  </div>
+              </div>
+                  <div class="is-size-5 publication-authors">
+                    <span class="author-block"><sup>1</sup>University of Toronto, <sup>2</sup>Noah's Ark Lab, Huawei Technologies</span>
+                    <span class="eql-cntrb"><small><br><sup>*</sup>Denotes Equal Contribution</small></span>
+                  </div>
+
+                  <div class="column has-text-centered">
+                    <div class="publication-links">
+                         <!-- Arxiv PDF link -->
+                      <span class="link-block">
+                        <a href="https://arxiv.org/pdf/<ARXIV PAPER ID>.pdf" target="_blank"
+                        class="external-link button is-normal is-rounded is-dark">
+                        <span class="icon">
+                          <i class="fas fa-file-pdf"></i>
+                        </span>
+                        <span>Paper</span>
+                      </a>
+                    </span>
+
+                    <!-- Supplementary PDF link -->
+                    <span class="link-block">
+                      <a href="static/pdfs/supplementary_material.pdf" target="_blank"
+                      class="external-link button is-normal is-rounded is-dark">
+                      <span class="icon">
+                        <i class="fas fa-file-pdf"></i>
+                      </span>
+                      <span>Supplementary</span>
+                    </a>
+                  </span>
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/<ARXIV PAPER ID>" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                    <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#BibTeX" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                    <i class="fas fa-book"></i>
+                  </span>
+                  <span>BibTeX</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Teaser video-->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <video poster="" id="tree" loop height="100%" playsinline="" autoplay="" muted="" >
+        <!-- Your video here -->
+        <source src="static/videos/banner_video.mp4" type="video/mp4">
+      </video>
+      <h2 class="subtitle has-text-centered">
+        AutoSplat can perform realistic simulation of diverse autonomous driving scenarios. 
+      </h2>
+    </div>
+  </div>
+</section>
+<!-- End teaser video -->
+
+<!-- Paper abstract -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Realistic scene reconstruction and view synthesis are essential for advancing autonomous driving systems by simulating safety-critical scenarios. 3D Gaussian Splatting excels in real-time rendering and static scene reconstructions but struggles with modeling driving scenarios due to complex backgrounds, dynamic objects, and sparse views. We propose AutoSplat, a framework employing Gaussian splatting to achieve highly realistic reconstructions of autonomous driving scenes. By imposing geometric constraints on Gaussians representing the road and sky regions, our method enables multi-view consistent simulation of challenging scenarios including lane changes. Leveraging 3D templates, we introduce a reflected Gaussian consistency constraint to supervise both the visible and unseen side of foreground objects. Moreover, to model the dynamic appearance of foreground objects, we estimate residual spherical harmonics for each foreground Gaussian. Extensive experiments on Pandaset and KITTI demonstrate that AutoSplat outperforms state-of-the-art methods in scene reconstruction and novel view synthesis across diverse driving scenarios.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End paper abstract -->
+
+<!-- Begin Motivation -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title is-3">Motivation</h2>
+       <section class="hero teaser">
+        <div class="container is-max-desktop">
+          <div class="video-pair">
+            <div class="video-container">
+              <video poster="" id="video0" loop playsinline autoplay muted>
+                <source src="static/videos/reconstruction/GT/GT_scene_064.mp4" type="video/mp4">
+              </video>
+              <h2 class="subtitle">
+                Ground-Truth
+              </h2>
+            </div>
+            <div class="video-container">
+              <img src="static/images/3dgs_problem.png" style="max-width: 85%; margin: 0.5 auto; line-height: 1.2" alt="AutoSplat motivation."/>
+            <h2 class="subtitle has-text-centered">
+              Unlike 3DGS, AutoSplat reconstructs foreground objects and maintains quality during ego-vehicle lateral shifts.
+            </h2>
+            </div>
+          </div>
+          <div class="video-pair">
+            <div class="video-container">
+              <video poster="" id="video1" loop playsinline autoplay muted>
+                <source src="static/videos/reconstruction/3dgs/3dgs_reconstruction_scene_064.mp4" type="video/mp4">
+              </video>
+              <h2 class="subtitle">
+                3DGS - Scene Reconstruction
+              </h2>
+            </div>
+            <div class="video-container">
+              <video poster="" id="video3" loop playsinline autoplay muted>
+                <source src="static/videos/reconstruction/ours/ours_reconstruction_scene_064.mp4" type="video/mp4">
+              </video>
+              <h2 class="subtitle">
+                Ours - Scene Reconstruction
+              </h2>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+<!-- End Motivation -->
+
+
+<!-- Begin Overview -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title is-3">Method</h2>
+    <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+    <div class="container">
+       <div class="item">
+        <!-- Your image here -->
+        <!-- <img src="static/images/architecture_overview.png" style="max-width: 75%; margin: 0.5 auto; line-height: 1.2" alt="AutoSplat overview."/> -->
+        <video poster="" id="video3" loop playsinline autoplay muted>
+          <source src="static/videos/autosplat_overview_animated.mp4" type="video/mp4">
+        </video>
+        <h2 class="subtitle has-text-centered">
+          AutoSplat reconstructs the background and foreground separately and then fuses them to simulate different scenarios.
+        </h2>
+      </div>
+    </div>
+    </div>
+</div>
+</div>
+  </div>
+</section>
+<!-- End overview -->
+
+<!-- Youtube video --> <!-- TODO: Might include later -->
+<!-- <section class="hero is-small is-light">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title is-3">Video Presentation</h2>
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          
+          <div class="publication-video">
+            <iframe src="https://www.youtube.com/embed/JkaxUblCGz0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section> -->
+<!-- End youtube video -->
+
+<!-- Reconstruction and NVS comparison -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title is-3">Comparison To SOTA</h2>
+      <div class="row ">
+        <div class="col-md-8 col-md-offset-2 ">
+            <h3 class="subtitle is-4">Scene Reconstruction</h3>
+            <div class="video-compare-container" id="seq095_compare_videoDiv" style="display: inline;">
+                <video class="video" id="seq095_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/reconstruction_emernerf_vs_ours_scene_095.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+                </video>
+                <canvas height="1080" class="videoMerge" id="seq095_compare_videoMerge" width="1920"></canvas>
+
+            </div>
+            <div class="video-compare-container" id="seq098_compare_videoDiv" style="display: inline;">
+                <video class="video" id="seq098_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/reconstruction_emernerf_vs_ours_scene_098.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+                </video>
+                <canvas height="1080" class="videoMerge" id="seq098_compare_videoMerge" width="1920"></canvas>
+            </div>
+            <div class="video-compare-container" id="seq034_compare_videoDiv" style="display: inline;">
+              <video class="video" id="seq034_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/reconstruction_suds_vs_ours_scene_034.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+              </video>
+              <canvas height="1080" class="videoMerge" id="seq034_compare_videoMerge" width="1920"></canvas>
+
+          </div>
+          <div class="video-compare-container" id="seq037_compare_videoDiv" style="display: inline;">
+              <video class="video" id="seq037_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/reconstruction_suds_vs_ours_scene_037.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+              </video>
+              <canvas height="1080" class="videoMerge" id="seq037_compare_videoMerge" width="1920"></canvas>
+          </div>
+          <div class="video-compare-container" id="seq021_compare_videoDiv" style="display: inline;">
+            <video class="video" id="seq021_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/reconstruction_mars_vs_ours_scene_021.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+            </video>
+            <canvas height="1080" class="videoMerge" id="seq021_compare_videoMerge" width="1920"></canvas>
+        </div>
+        </div>
+        <h2 class="subtitle has-text-centered">
+          _________<bm></bm>
+        </h2>
+
+    </div>
+    
+    <div class="row ">
+      <div class="col-md-8 col-md-offset-2 ">
+          <h3 class="subtitle is-4">Novel View Synthesis</h3>
+          <div class="video-compare-container" id="seq064_lane_change_compare_videoDiv" style="display: inline;">
+              <video class="video" id="seq064_lane_change_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/lane_change/LS3_emernerf_vs_ours_scene_064.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+              </video>
+              <canvas height="1080" class="videoMerge" id="seq064_lane_change_compare_videoMerge" width="1920"></canvas>
+          </div>
+          <div class="video-compare-container" id="seq078_lane_change_compare_videoDiv" style="display: inline;">
+              <video class="video" id="seq078_lane_change_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/lane_change/LS3_emernerf_vs_ours_scene_078.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+              </video>
+              <canvas height="1080" class="videoMerge" id="seq078_lane_change_compare_videoMerge" width="1920"></canvas>
+          </div>
+        <div class="video-compare-container" id="seq098_lane_change_compare_videoDiv" style="display: inline;">
+            <video class="video" id="seq098_lane_change_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/lane_change/LS2_suds_vs_ours_scene_098.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+            </video>
+            <canvas height="1080" class="videoMerge" id="seq098_lane_change_compare_videoMerge" width="1920"></canvas>
+        </div>
+      </div>
+  </div>
+    </div>
+  </div>
+</section>
+<!-- End reconstruction and NVS comparison -->
+
+<!-- Road and sky geometry comparison -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title is-3">Road and Sky Geometry Constraints</h2>
+<div class="row ">
+  <div class="col-md-8 col-md-offset-2 ">
+      <div class="video-compare-container" id="geometry_compare_videoDiv" style="display: inline;">
+          <video class="video" id="geometry_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/road_and_sky_geometry_constraints.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+          </video>
+          <canvas height="1080" class="videoMerge" id="geometry_compare_videoMerge" width="1920"></canvas>
+          <h2 class="subtitle has-text-centered">
+            AutoSplat enforces road and sky geometry constraints, which maintain view synthesis quality during ego-vehicle lateral shifts.
+          </h2>
+      </div>
+  </div>
+</div>
+</div>
+  </div>
+</section>
+<!-- Endroad and sky geometry comparison -->
+
+<!-- Reflected gaussian consistency comparison -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title is-3">Reflected Gaussian Consistency</h2>
+    <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+    <div class="container">
+       <div class="item">
+        <video poster="" id="video3" loop playsinline autoplay muted>
+          <source src="static/videos/reflected_gaussian_consistency_animated.mp4" type="video/mp4" tyle="max-width: 75%; margin: 0.5 auto">
+        </video>
+        <h2 class="subtitle has-text-centered">
+          AutoSplat leverages a reflected Gaussian consistency constraint that supervises both the visible and unseen side of foreground objects.
+        </h2>
+      </div>
+    </div>
+    </div>
+</div>
+<div class="row ">
+  <div class="col-md-8 col-md-offset-2 ">
+      <div class="video-compare-container" id="reflected_compare_videoDiv" style="display: inline;">
+          <video class="video" id="reflected_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/reflected_gaussian_consistency_ablation.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+          </video>
+          <canvas height="1080" class="videoMerge" id="reflected_compare_videoMerge" width="1920"></canvas>
+
+      </div>
+  </div>
+
+</div>
+
+</div>
+  </div>
+</section>
+<!-- End reflected gaussian consistency comparison -->
+
+<!-- Dynamic Appearance Modelling comparison -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title is-3">Dynamic Appearance Modelling Via Temporally-Dependent Residual Spherical Harmonics</h2>
+    <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+    <div class="container">
+       <div class="item">
+          <video class="video" id="dynamic_appearance_scene_078_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/dynamic_appearance/dynamic_appearance_modelling_scene_078.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+          </video>
+          <canvas height="1080" class="videoMerge" id="dynamic_appearance_scene_078_compare_videoMerge" width="1920"></canvas>
+      </div>
+      <div class="video-compare-container" id="dynamic_appearance_scene_067_compare_videoDiv" style="display: inline;">
+        <video class="video" id="dynamic_appearance_scene_067_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/dynamic_appearance/dynamic_appearance_modelling_scene_067.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+        </video>
+        <canvas height="1080" class="videoMerge" id="dynamic_appearance_scene_067_compare_videoMerge" width="1920"></canvas>
+    </div>
+        <h2 class="subtitle has-text-centered">
+          AutoSplat captures the dynamic appearance of foreground objects by estimating temporally-dependent, residual spherical harmonics.
+        </h2>
+      </div>
+    </div>
+    </div>
+</div>
+</div>
+  </div>
+</section>
+<!-- End Dynamic Appearance Modelling  comparison -->
+
+<!--BibTex citation -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@misc{khan2024autosplat,
+  title={AutoSplat: Constrained Gaussian Splatting for Autonomous Driving Scene Reconstruction}, 
+  author={Mustafa Khan and Hamidreza Fazlali and Dhruv Sharma and Tongtong Cao and Dongfeng Bai and Yuan Ren and Bingbing Liu},
+  year={2024},
+  eprint={},
+  archivePrefix={arXiv},
+  primaryClass={cs.CV}
+}</code></pre>
+  </div>
+</section>
+<!--End BibTex citation -->
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered">
+          <a href="#top" class="button is-small is-link" style="margin-bottom: 20px;">
+            <span class="icon">
+              <i class="fas fa-arrow-up"></i>
+            </span>
+            <span>Back To Top</span>
+          </a>
+          <p>
+            Website borrowed from  
+            <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">
+              <span class="icon">
+                <i class="fab fa-github"></i>
+              </span>
+              GitHub
+            </a>.
+          </p>
+          <p>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
