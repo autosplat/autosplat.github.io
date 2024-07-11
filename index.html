@@ -17,7 +17,7 @@
   <!-- Keywords for your paper to be indexed by-->
   <meta name="keywords" content="AutoSplat, 3D Gaussian Splatting, Autonomous Driving, Scene Reconstruction">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <link rel="preload" as="video" href="https://autosplat.s3.amazonaws.com/videos/banner_video.mp4">
   <title>AutoSplat</title>
   <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
@@ -38,9 +38,34 @@
   <script src="static/js/bulma-slider.min.js"></script>
   <script src="static/js/video_comparison.js"></script>
   <script src="static/js/index.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const lazyVideos = [].slice.call(document.querySelectorAll('video.lazy'));
+      if ('IntersectionObserver' in window) {
+        let lazyVideoObserver = new IntersectionObserver(function (entries, observer) {
+          entries.forEach(function (video) {
+            if (video.isIntersecting) {
+              for (let source in video.target.children) {
+                let videoSource = video.target.children[source];
+                if (typeof videoSource.tagName === 'string' && videoSource.tagName === 'SOURCE') {
+                  videoSource.src = videoSource.dataset.src;
+                }
+              }
+              video.target.load();
+              video.target.classList.remove('lazy');
+              lazyVideoObserver.unobserve(video.target);
+            }
+          });
+        });
+
+        lazyVideos.forEach(function (lazyVideo) {
+          lazyVideoObserver.observe(lazyVideo);
+        });
+      }
+    });
+  </script>
 </head>
 <body>
-
 
   <section class="hero">
     <div class="hero-body">
@@ -50,34 +75,55 @@
             <h1 class="title is-1 publication-title" style="font-size: 2.8rem; max-width: 100%; margin: 0.5 auto; line-height: 1.2;">AutoSplat: Constrained Gaussian Splatting <br>for Autonomous Driving Scene Reconstruction</h1>
             <div class="is-size-5 publication-authors">
               <!-- Paper authors -->
-              <div class="is-size-5 publication-authors">
               <div class="author-row">
                 <span class="author-block">
-                  <a href="" target="_blank">Anonymous Authors</a>
+                  <a href="https://scholar.google.com/citations?hl=en&user=9x5vFboAAAAJ&view_op=list_works&authuser=1&sortby=pubdate" target="_blank">Mustafa Khan</a><sup>1,2,*</sup>,</span>
                 <span class="author-block">
+                  <a href="https://scholar.google.com/citations?hl=en&user=0fhlNwEAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Hamidreza Fazlali</a><sup>2,*</sup>,</span>
+                <span class="author-block">
+                  <a href="https://scholar.google.com/citations?hl=en&user=tJ-3yAkAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Dhruv Sharma</a><sup>2</sup>,</span>
+                </span>
               </div>
+              <div class="author-row">
+                  <span class="author-block">
+                    <a href="https://scholar.google.com/citations?hl=en&user=SkzzXSYAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Tongtong Cao</a><sup>2</sup>, </span>
+                  </span>
+                  <span class="author-block">
+                    <a href="https://scholar.google.com/citations?hl=zh-CN&user=aubQLGYAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Dongfeng Bai</a><sup>2</sup>, </span>
+                  </span>
+                  <span class="author-block">
+                    <a href="https://scholar.google.com/citations?hl=en&user=P4Rp5uAAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Yuan Ren</a><sup>2</sup>, </span>
+                  </span>
+                  <span class="author-block">
+                    <a href="https://scholar.google.com.sg/citations?hl=en&user=-rCulKwAAAAJ&view_op=list_works&sortby=pubdate" target="_blank">Bingbing Liu</a><sup>2</sup>,</span>
+                  </span>
+                  </div>
+              </div>
+                  <div class="is-size-5 publication-authors">
+                    <span class="author-block"><sup>1</sup>University of Toronto, <sup>2</sup>Noah's Ark Lab, Huawei Technologies</span>
+                    <span class="eql-cntrb"><small><br><sup>*</sup>Denotes Equal Contribution</small></span>
+                  </div>
                   <div class="column has-text-centered">
                     <div class="publication-links">
-                         <!-- Paper PDF link -->
-                      <!-- <span class="link-block">
-                        <a href="https://arxiv.org/pdf/<ARXIV PAPER ID>.pdf" target="_blank"
+                      <span class="link-block">
+                        <a href="https://arxiv.org/abs/2407.02598" target="_blank"
                         class="external-link button is-normal is-rounded is-dark">
                         <span class="icon">
-                          <i class="fas fa-file-pdf"></i>
+                          <i class="ai ai-arxiv"></i>
                         </span>
-                        <span>Paper</span>
+                        <span>arXiv</span>
                       </a>
-                    </span> -->
-              <span class="link-block">
-                <a href="#BibTeX" class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                    <i class="fas fa-book"></i>
-                  </span>
-                  <span>BibTeX</span>
-                </a>
-              </span>
-            </div>
-          </div>
+                      </span>
+                      <span class="link-block">
+                        <a href="#BibTeX" class="external-link button is-normal is-rounded is-dark">
+                          <span class="icon">
+                            <i class="fas fa-book"></i>
+                          </span>
+                          <span>BibTeX</span>
+                        </a>
+                      </span>
+                    </div>
+                  </div>
         </div>
       </div>
     </div>
@@ -88,7 +134,7 @@
 <section class="hero teaser">
   <div class="container is-max-desktop">
     <div class="hero-body">
-      <video poster="" id="tree" loop height="100%" playsinline="" autoplay="" muted="" >
+      <video class="lazy" poster="" id="tree" loop height="100%" playsinline="" autoplay="" muted="" >
         <!-- Your video here -->
         <source src="https://autosplat.s3.amazonaws.com/videos/banner_video.mp4" type="video/mp4">
       </video>
@@ -126,7 +172,7 @@
         <div class="container is-max-desktop">
           <div class="video-pair">
             <div class="video-container">
-              <video poster="" id="video0" loop playsinline autoplay muted>
+              <video class="lazy" poster="" id="video0" loop playsinline autoplay muted>
                 <source src="https://autosplat.s3.amazonaws.com/videos/reconstruction/GT/GT_scene_064.mp4" type="video/mp4">
               </video>
               <h2 class="subtitle">
@@ -142,7 +188,7 @@
           </div>
           <div class="video-pair">
             <div class="video-container">
-              <video poster="" id="video1" loop playsinline autoplay muted>
+              <video class="lazy" poster="" id="video1" loop playsinline autoplay muted>
                 <source src="https://autosplat.s3.amazonaws.com/videos/reconstruction/3dgs/3dgs_reconstruction_scene_064.mp4" type="video/mp4">
               </video>
               <h2 class="subtitle">
@@ -176,10 +222,7 @@
     <div class="container">
        <div class="item">
         <!-- Your image here -->
-        <!-- <img src="static/images/architecture_overview.png" style="max-width: 75%; margin: 0.5 auto; line-height: 1.2" alt="AutoSplat overview."/> -->
-        <video poster="" id="video3" loop playsinline autoplay muted>
-          <source src="https://autosplat.s3.amazonaws.com/videos/autosplat_overview_animated.mp4" type="video/mp4">
-        </video>
+        <img src="https://autosplat.s3.amazonaws.com/images/architecture_final.jpg" style="max-width: 100%; margin: 0.5 auto; line-height: 1.2" alt="AutoSplat architecture."/>
         <h2 class="subtitle has-text-centered">
           AutoSplat reconstructs the background and foreground separately and then fuses them to simulate different scenarios.
         </h2>
@@ -219,29 +262,29 @@
         <div class="col-md-8 col-md-offset-2 ">
             <h3 class="subtitle is-4">Scene Reconstruction</h3>
             <div class="video-compare-container" id="seq095_compare_videoDiv" style="display: inline;">
-                <video class="video" id="seq095_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reconstruction_emernerf_vs_ours_scene_095.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+                <video class="video lazy" id="seq095_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reconstruction_emernerf_vs_ours_scene_095.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
                 </video>
                 <canvas height="1080" class="videoMerge" id="seq095_compare_videoMerge" width="1920"></canvas>
 
             </div>
             <div class="video-compare-container" id="seq098_compare_videoDiv" style="display: inline;">
-                <video class="video" id="seq098_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reconstruction_emernerf_vs_ours_scene_098.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+                <video class="video lazy" id="seq098_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reconstruction_emernerf_vs_ours_scene_098.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
                 </video>
                 <canvas height="1080" class="videoMerge" id="seq098_compare_videoMerge" width="1920"></canvas>
             </div>
             <div class="video-compare-container" id="seq034_compare_videoDiv" style="display: inline;">
-              <video class="video" id="seq034_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reconstruction_suds_vs_ours_scene_034.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+              <video class="video lazy" id="seq034_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reconstruction_suds_vs_ours_scene_034.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
               </video>
               <canvas height="1080" class="videoMerge" id="seq034_compare_videoMerge" width="1920"></canvas>
 
           </div>
           <div class="video-compare-container" id="seq037_compare_videoDiv" style="display: inline;">
-              <video class="video" id="seq037_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reconstruction_suds_vs_ours_scene_037.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+              <video class="video lazy" id="seq037_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reconstruction_suds_vs_ours_scene_037.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
               </video>
               <canvas height="1080" class="videoMerge" id="seq037_compare_videoMerge" width="1920"></canvas>
           </div>
           <div class="video-compare-container" id="seq021_compare_videoDiv" style="display: inline;">
-            <video class="video" id="seq021_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reconstruction_mars_vs_ours_scene_021.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+            <video class="video lazy" id="seq021_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reconstruction_mars_vs_ours_scene_021.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
             </video>
             <canvas height="1080" class="videoMerge" id="seq021_compare_videoMerge" width="1920"></canvas>
         </div>
@@ -256,17 +299,17 @@
       <div class="col-md-8 col-md-offset-2 ">
           <h3 class="subtitle is-4">Novel View Synthesis</h3>
           <div class="video-compare-container" id="seq064_lane_change_compare_videoDiv" style="display: inline;">
-              <video class="video" id="seq064_lane_change_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/lane_change/LS3_emernerf_vs_ours_scene_064.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+              <video class="video lazy" id="seq064_lane_change_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/lane_change/LS3_emernerf_vs_ours_scene_064.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
               </video>
               <canvas height="1080" class="videoMerge" id="seq064_lane_change_compare_videoMerge" width="1920"></canvas>
           </div>
           <div class="video-compare-container" id="seq078_lane_change_compare_videoDiv" style="display: inline;">
-              <video class="video" id="seq078_lane_change_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/lane_change/LS3_emernerf_vs_ours_scene_078.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+              <video class="video lazy" id="seq078_lane_change_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/lane_change/LS3_emernerf_vs_ours_scene_078.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
               </video>
               <canvas height="1080" class="videoMerge" id="seq078_lane_change_compare_videoMerge" width="1920"></canvas>
           </div>
         <div class="video-compare-container" id="seq098_lane_change_compare_videoDiv" style="display: inline;">
-            <video class="video" id="seq098_lane_change_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/lane_change/LS2_suds_vs_ours_scene_098.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+            <video class="video lazy" id="seq098_lane_change_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/lane_change/LS2_suds_vs_ours_scene_098.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
             </video>
             <canvas height="1080" class="videoMerge" id="seq098_lane_change_compare_videoMerge" width="1920"></canvas>
         </div>
@@ -285,7 +328,7 @@
 <div class="row ">
   <div class="col-md-8 col-md-offset-2 ">
       <div class="video-compare-container" id="geometry_compare_videoDiv" style="display: inline;">
-          <video class="video" id="geometry_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/road_and_sky_geometry_constraints.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+          <video class="video lazy" id="geometry_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/road_and_sky_geometry_constraints.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
           </video>
           <canvas height="1080" class="videoMerge" id="geometry_compare_videoMerge" width="1920"></canvas>
           <h2 class="subtitle has-text-centered">
@@ -308,7 +351,7 @@
     <div class="columns is-centered has-text-centered">
     <div class="container">
        <div class="item">
-        <video poster="" id="video3" loop playsinline autoplay muted>
+        <video class="lazy" poster="" id="video3" loop playsinline autoplay muted>
           <source src="https://autosplat.s3.amazonaws.com/videos/reflected_gaussian_consistency_animated.mp4" type="video/mp4" tyle="max-width: 75%; margin: 0.5 auto">
         </video>
         <h2 class="subtitle has-text-centered">
@@ -321,7 +364,7 @@
 <div class="row ">
   <div class="col-md-8 col-md-offset-2 ">
       <div class="video-compare-container" id="reflected_compare_videoDiv" style="display: inline;">
-          <video class="video" id="reflected_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reflected_gaussian_consistency_ablation.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+          <video class="video lazy" id="reflected_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/reflected_gaussian_consistency_ablation.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
           </video>
           <canvas height="1080" class="videoMerge" id="reflected_compare_videoMerge" width="1920"></canvas>
 
@@ -344,12 +387,12 @@
     <div class="columns is-centered has-text-centered">
     <div class="container">
        <div class="item">
-          <video class="video" id="dynamic_appearance_scene_078_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/dynamic_appearance/dynamic_appearance_modelling_scene_078.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+          <video class="video lazy" id="dynamic_appearance_scene_078_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/dynamic_appearance/dynamic_appearance_modelling_scene_078.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
           </video>
           <canvas height="1080" class="videoMerge" id="dynamic_appearance_scene_078_compare_videoMerge" width="1920"></canvas>
       </div>
       <div class="video-compare-container" id="dynamic_appearance_scene_067_compare_videoDiv" style="display: inline;">
-        <video class="video" id="dynamic_appearance_scene_067_compare_video" loop="" playsinline="" autoplay="" muted="" src="https://autosplat.s3.amazonaws.com/videos/comparison/dynamic_appearance/dynamic_appearance_modelling_scene_067.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
+        <video class="video lazy" id="dynamic_appearance_scene_067_compare_video" loop="" playsinline="" autoplay="" muted="" src="static/videos/comparison/dynamic_appearance/dynamic_appearance_modelling_scene_067.mp4" onplay="resizeAndPlay(this)" style="height: 0px;">
         </video>
         <canvas height="1080" class="videoMerge" id="dynamic_appearance_scene_067_compare_videoMerge" width="1920"></canvas>
     </div>
@@ -369,7 +412,15 @@
 <section class="section" id="BibTeX">
   <div class="container is-max-desktop content">
     <h2 class="title">BibTeX</h2>
-    <pre><code>Coming soon...</code></pre>
+    <pre><code>@misc{khan2024autosplatconstrainedgaussiansplatting,
+      title={AutoSplat: Constrained Gaussian Splatting for Autonomous Driving Scene Reconstruction}, 
+      author={Mustafa Khan and Hamidreza Fazlali and Dhruv Sharma and Tongtong Cao and Dongfeng Bai and Yuan Ren and Bingbing Liu},
+      year={2024},
+      eprint={2407.02598},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2407.02598}, 
+}</code></pre>
   </div>
 </section>
 <!--End BibTex citation -->
